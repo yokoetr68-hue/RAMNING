@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS Stats Lab — Match Analyzer</title>
+<style>
+:root{--bg:#0b0e14;--panel:#141a24;--panel2:#192230;--line:#283446;--text:#edf2f7;--muted:#8d9aab;--accent:#f4a62a;--green:#36d399;--red:#ff667a;--blue:#6ba8ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0%,#172337 0,transparent 34%),var(--bg);color:var(--text);font-family:Inter,"Segoe UI",Arial,sans-serif}
+.wrap{max-width:1200px;margin:auto;padding:28px 20px 50px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:46px;height:46px;border-radius:13px;background:var(--accent);color:#151515;display:grid;place-items:center;font-weight:900;font-size:19px}.eyebrow{color:var(--accent);font-size:11px;letter-spacing:2px;font-weight:800}.brand h1{font-size:25px;margin:3px 0 0}.sub{color:var(--muted);font-size:13px;margin-top:5px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}button{cursor:pointer;border:1px solid var(--line);background:#202a39;color:var(--text);padding:10px 14px;border-radius:9px;font-weight:700}button:hover{filter:brightness(1.13)}button.primary{background:var(--accent);border-color:var(--accent);color:#171717}button.danger{color:#ff9eaa}
+.tabs{display:flex;gap:8px;margin:0 0 18px;flex-wrap:wrap}.tab{background:transparent;color:var(--muted)}.tab.active{background:var(--accent);color:#151515;border-color:var(--accent)}
+.page{display:none}.page.active{display:block}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:18px}.stat,.panel{background:linear-gradient(145deg,var(--panel),#111720);border:1px solid var(--line);border-radius:15px;padding:18px}.stat .label{font-size:12px;color:var(--muted)}.stat .value{font-size:28px;font-weight:850;margin:10px 0 4px}.stat .hint{font-size:12px;color:var(--muted)}.good{color:var(--green)}.bad{color:var(--red)}.accent{color:var(--accent)}
+.columns{display:grid;grid-template-columns:1.2fr .8fr;gap:15px}.panel h2{font-size:16px;margin:0 0 15px}.panel p{color:var(--muted);font-size:13px;line-height:1.6}.barrow{display:grid;grid-template-columns:100px 1fr 50px;gap:10px;align-items:center;margin:13px 0;font-size:12px}.track{height:8px;background:#263143;border-radius:20px;overflow:hidden}.fill{height:100%;background:var(--accent);border-radius:20px}.feed{display:grid;gap:10px}.insight{border:1px solid var(--line);border-left:3px solid var(--accent);padding:12px;border-radius:8px;background:#171f2b;font-size:13px;line-height:1.55}.insight strong{display:block;margin-bottom:4px}.insight.warn{border-left-color:var(--red)}.insight.ok{border-left-color:var(--green)}
+.formgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.field{display:flex;flex-direction:column;gap:7px}.field label{font-size:12px;color:var(--muted)}input,select,textarea{width:100%;background:#0e141d;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:11px;font:inherit;min-width:0}input:focus,select:focus,textarea:focus{outline:1px solid var(--accent);border-color:var(--accent)}.section-title{margin:22px 0 12px;font-size:13px;color:var(--accent);font-weight:800;letter-spacing:1px}.form-actions{display:flex;gap:9px;margin-top:18px;flex-wrap:wrap}.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:720px}th,td{text-align:left;border-bottom:1px solid var(--line);padding:13px 10px;font-size:12px;white-space:nowrap}th{color:var(--muted);font-weight:700}td strong{font-size:13px}.empty{text-align:center;padding:34px;color:var(--muted);font-size:13px}.pill{display:inline-block;padding:4px 8px;border-radius:99px;font-size:11px;background:#243044}.win{color:var(--green)}.loss{color:var(--red)}.small{font-size:11px;color:var(--muted)}.detailstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.mini{padding:12px;background:#101721;border:1px solid var(--line);border-radius:10px}.mini span{display:block;font-size:11px;color:var(--muted)}.mini b{display:block;font-size:20px;margin-top:5px}
+@media(max-width:800px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.columns{grid-template-columns:1fr}.formgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.wrap{padding:18px 12px 35px}}
+@media(max-width:480px){.formgrid{grid-template-columns:1fr}.brand h1{font-size:20px}.stat{padding:13px}.stat .value{font-size:24px}.grid{gap:8px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="brand"><div class="logo">CS</div><div><div class="eyebrow">PERSONAL PERFORMANCE TRACKER</div><h1>CS Stats Lab</h1><div class="sub">บันทึกแมตช์ • วิเคราะห์จุดอ่อน • พัฒนาฝีมือทีละเกม</div></div></div>
+  <div class="actions"><button id="exportBtn">ส่งออก CSV</button><button class="primary" id="newMatchBtn">＋ บันทึกแมตช์</button></div>
+</header>
+<nav class="tabs">
+  <button class="tab active" data-page="dashboard">ภาพรวม</button>
+  <button class="tab" data-page="add">บันทึกแมตช์</button>
+  <button class="tab" data-page="history">ประวัติแมตช์</button>
+  <button class="tab" data-page="analysis">AI Coach</button>
+</nav>
+
+<section class="page active" id="dashboard">
+  <div class="grid">
+    <div class="stat"><div class="label">MATCHES PLAYED</div><div class="value" id="sMatches">0</div><div class="hint">จำนวนแมตช์ที่บันทึก</div></div>
+    <div class="stat"><div class="label">K / D / A</div><div class="value" id="sKda">0 / 0 / 0</div><div class="hint" id="sKDHint">K/D Ratio: —</div></div>
+    <div class="stat"><div class="label">HEADSHOT RATE</div><div class="value" id="sHS">0%</div><div class="hint">ค่า HS% จากหน้า Stats ของ CS2</div></div>
+    <div class="stat"><div class="label">WIN RATE</div><div class="value" id="sWin">0%</div><div class="hint" id="sWinsHint">ชนะ 0 จาก 0 แมตช์</div></div>
+  </div>
+  <div class="columns">
+    <div class="panel"><h2>สถิติการเล่นโดยรวม</h2><div id="overviewBars"></div><p>ข้อมูลจะคำนวณจากแมตช์ที่คุณบันทึกไว้เท่านั้น</p></div>
+    <div class="panel"><h2>โค้ชแนะนำอะไรตอนนี้?</h2><div id="dashboardInsights" class="feed"></div></div>
+  </div>
+  <div class="panel" style="margin-top:15px"><h2>แมตช์ล่าสุด</h2><div id="recentMatches"></div></div>
+</section>
+
+<section class="page" id="add">
+  <div class="panel">
+    <h2 id="formTitle">บันทึกสถิติแมตช์ใหม่</h2>
+    <p>กรอกตัวเลขหลังจบเกม ระบบจะเก็บแยกเป็นรายแมตช์และนำไปคำนวณสถิติรวมให้โดยอัตโนมัติ</p>
+    <form id="matchForm">
+      <input type="hidden" id="editId">
+      <div class="section-title">ข้อมูลแมตช์</div>
+      <div class="formgrid">
+        <div class="field"><label for="date">วันที่และเวลา</label><input id="date" type="datetime-local" required></div>
+        <div class="field"><label for="map">แผนที่ (Map)</label><select id="map"><option>Dust II</option><option>Mirage</option><option>Inferno</option><option>Ancient</option><option>Anubis</option><option>Nuke</option><option>Vertigo</option><option>Office</option><option>อื่น ๆ</option></select></div>
+        <div class="field"><label for="result">ผลการแข่งขัน</label><select id="result"><option value="win">ชนะ</option><option value="loss">แพ้</option><option value="draw">เสมอ</option></select></div>
+        <div class="field"><label for="score">สกอร์ทีม (เช่น 13-9)</label><input id="score" placeholder="13-9"></div>
+        <div class="field"><label for="side">เล่นฝั่ง</label><select id="side"><option>ทั้ง CT/T</option><option>CT</option><option>T</option></select></div>
+        <div class="field"><label for="mode">โหมด</label><select id="mode"><option>Competitive</option><option>Casual</option><option>Deathmatch</option><option>Wingman</option><option>อื่น ๆ</option></select></div>
+      </div>
+      <div class="section-title">สถิติส่วนตัว (Player Stats)</div>
+      <div class="formgrid">
+        <div class="field"><label for="kills">Kills — ฆ่า</label><input id="kills" type="number" min="0" value="15" required></div>
+        <div class="field"><label for="deaths">Deaths — ตาย</label><input id="deaths" type="number" min="0" value="12" required></div>
+        <div class="field"><label for="assists">Assists — ช่วยฆ่า</label><input id="assists" type="number" min="0" value="4" required></div>
+        <div class="field"><label for="hsPct">Headshot % (กรอกตามที่ CS2 แสดง)</label><input id="hsPct" type="number" min="0" max="100" step="0.1" value="40" required></div>
+        <div class="field"><label for="damage">Damage รวม</label><input id="damage" type="number" min="0" value="1500"></div>
+        <div class="field"><label for="adr">ADR (ถ้ารู้)</label><input id="adr" type="number" min="0" placeholder="เช่น 78"></div>
+        <div class="field"><label for="shots">จำนวนกระสุนที่ยิง (ถ้ารู้)</label><input id="shots" type="number" min="0" placeholder="optional"></div>
+        <div class="field"><label for="hits">จำนวนกระสุนโดน (ถ้ารู้)</label><input id="hits" type="number" min="0" placeholder="optional"></div>
+        <div class="field"><label for="mvp">MVP</label><input id="mvp" type="number" min="0" value="0"></div>
+      </div>
+      <div class="section-title">พฤติกรรมและโน้ต (ช่วยให้โค้ชแนะนำได้ตรงขึ้น)</div>
+      <div class="formgrid">
+        <div class="field"><label for="opening">Opening duel</label><select id="opening"><option value="unknown">ไม่ทราบ / ไม่ได้จด</option><option value="positive">ชนะดวลเปิดบ่อย</option><option value="negative">ตายก่อนบ่อย</option><option value="neutral">พอ ๆ กัน</option></select></div>
+        <div class="field"><label for="utility">การใช้ระเบิด</label><select id="utility"><option value="unknown">ไม่ทราบ</option><option value="good">ช่วยทีมได้ดี</option><option value="low">ใช้น้อย / ไม่ค่อยเป็น</option><option value="waste">ใช้ทิ้งโดยไม่เกิดประโยชน์</option></select></div>
+        <div class="field"><label for="aim">ความรู้สึกเรื่อง Aim</label><select id="aim"><option value="okay">ปกติ</option><option value="bad">เล็งไม่ค่อยโดน</option><option value="good">เล็งค่อนข้างดี</option></select></div>
+        <div class="field"><label for="position">ตำแหน่ง / การยืน</label><select id="position"><option value="unknown">ไม่แน่ใจ</option><option value="good">ยืนตำแหน่งดี</option><option value="exposed">เปิดมุมหลายด้าน / ยืนโล่ง</option><option value="rotate">หมุนช่วยช้า</option></select></div>
+        <div class="field"><label for="tilt">สมาธิ / อารมณ์</label><select id="tilt"><option value="steady">คุมอารมณ์ได้</option><option value="tilted">หัวร้อนหลังตายหรือแพ้</option><option value="tired">เริ่มล้า / สมาธิหลุด</option></select></div>
+        <div class="field"><label for="notes">โน้ตหลังเกม</label><input id="notes" placeholder="เช่น peek ซ้ำมุมเดิม, รีโหลดกลางไฟต์"></div>
+      </div>
+      <div class="form-actions"><button class="primary" type="submit">บันทึกแมตช์</button><button type="button" id="cancelEdit" style="display:none">ยกเลิกแก้ไข</button><button type="reset" id="resetForm">ล้างฟอร์ม</button></div>
+    </form>
+  </div>
+</section>
+
+<section class="page" id="history">
+  <div class="panel"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap"><h2>ประวัติทุกแมตช์</h2><div class="actions"><input id="searchHistory" placeholder="ค้นหา Map / โน้ต..." style="width:200px"><select id="filterResult" style="width:130px"><option value="all">ทุกผล</option><option value="win">ชนะ</option><option value="loss">แพ้</option><option value="draw">เสมอ</option></select></div></div><div id="historyTable"></div></div>
+</section>
+
+<section class="page" id="analysis">
+  <div class="panel"><h2>AI Coach — วิเคราะห์จุดที่ควรแก้</h2><p>คำแนะนำในเวอร์ชันนี้เป็นการวิเคราะห์อัตโนมัติจากกฎและสถิติที่บันทึกไว้ ยังไม่ได้เรียกโมเดล AI ภายนอก หากต้องการ AI จริงต้องเชื่อม Backend/API อย่างปลอดภัย</p><div id="fullAnalysis" class="feed"></div></div>
+  <div class="panel" style="margin-top:15px"><h2>แผนฝึกครั้งถัดไป</h2><div id="trainingPlan" class="feed"></div></div>
+</section>
+<div class="small" style="margin-top:18px">ข้อมูลเก็บไว้ในเบราว์เซอร์เครื่องนี้ด้วย localStorage • ล้างข้อมูลเบราว์เซอร์แล้วข้อมูลอาจหาย • เวอร์ชันนี้ยังไม่ได้ดึงสถิติจากเกมอัตโนมัติ</div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const STORAGE_KEY = 'csStatsLabMatchesV1';
+let matches = loadMatches();
+function loadMatches(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]')}catch{return []}}
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(matches));renderAll()}
+function num(id){return Math.max(0,Number($(id).value)||0)}
+function localDateTime(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)}
+function escapeHtml(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function go(page){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===page));document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.page===page));if(page==='add'&&!$('editId').value)$('date').value=localDateTime()}
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>go(t.dataset.page)));
+$('newMatchBtn').onclick=()=>{resetMatchForm();go('add')};
+$('date').value=localDateTime();
+function matchHsPct(m){return Number.isFinite(Number(m.hsPct)) && m.hsPct!==undefined ? Number(m.hsPct) : (m.kills ? (Number(m.hs)||0)/Number(m.kills)*100 : 0)}
+function totals(list=matches){return list.reduce((a,m)=>{for(const k of ['kills','deaths','assists','damage','mvp','shots','hits'])a[k]+=Number(m[k])||0;a.hsWeighted+=matchHsPct(m)*(Number(m.kills)||0);a.hsWeight+=Number(m.kills)||0;a.wins+=m.result==='win'?1:0;a.losses+=m.result==='loss'?1:0;a.draws+=m.result==='draw'?1:0;return a},{kills:0,deaths:0,assists:0,hsWeighted:0,hsWeight:0,damage:0,mvp:0,shots:0,hits:0,wins:0,losses:0,draws:0})}
+function pct(a,b){return b?Math.round(a/b*100):0}
+function ratio(a,b){return b?(a/b).toFixed(2):(a? a.toFixed(2):'—')}
+function insightList(){
+ if(!matches.length)return [{type:'',title:'เริ่มจากบันทึกแมตช์แรก',body:'หลังจบเกม กรอก K/D/A, Headshot % ตามที่ CS2 แสดง และสิ่งที่สังเกตได้ โค้ชจะเริ่มหาจุดที่ควรฝึกจากข้อมูลของคุณ'}];
+ const t=totals(),n=matches.length,hs=t.hsWeight?Math.round(t.hsWeighted/t.hsWeight):0,kd=t.deaths?t.kills/t.deaths:(t.kills?99:0),list=[];
+ if(hs<35)list.push({type:'warn',title:'ฝึกวางเป้าให้อยู่ระดับหัว',body:`Headshot rate ของคุณอยู่ที่ ${hs}% ลองฝึก pre-aim และวาง crosshair ระดับหัวก่อน peek อย่ากวาดเมาส์จากพื้นขึ้นไปหาศัตรู`});
+ else if(hs>=55)list.push({type:'ok',title:'Headshot rate ทำได้ดี',body:`Headshot rate ${hs}% เป็นสัญญาณที่ดี รักษาการวางเป้าไว้ และเช็กว่าความแม่นยังคงที่เวลายิงขณะเคลื่อนที่หรือไม่`});
+ if(kd<0.85)list.push({type:'warn',title:'ลดการตายที่ไม่จำเป็น',body:`K/D ${kd.toFixed(2)} ต่ำกว่า 0.85 ให้เน้นใช้ cover, อย่า peek มุมเดิมซ้ำ และถอยเมื่อเสียเปรียบแทนการฝืนดวล`});
+ else if(kd>=1.2)list.push({type:'ok',title:'อัตราฆ่าต่อการตายดี',body:`K/D ${kd.toFixed(2)} ดีทีเดียว ต่อไปให้ดูว่าการเล่นของคุณช่วยยึดพื้นที่หรือเทรดเพื่อนร่วมทีมได้ด้วยหรือไม่`});
+ if(t.assists/n<3)list.push({type:'',title:'เพิ่มการช่วยทีม',body:`เฉลี่ย ${ (t.assists/n).toFixed(1)} assists ต่อแมตช์ ลองเล่นระยะที่เทรดเพื่อนได้ ใช้ flash ก่อนเข้า และสื่อสารตำแหน่งศัตรู`});
+ const lowAim=matches.filter(m=>m.aim==='bad').length;if(lowAim)list.push({type:'warn',title:'Aim รู้สึกไม่เข้ามือในหลายเกม',body:`คุณบันทึกว่าเล็งไม่โดน ${lowAim} แมตช์ ลอง Deathmatch 10–15 นาที: เน้นหยุดก่อนยิง, burst สั้น ๆ และอย่าเปลี่ยน sensitivity บ่อย`});
+ const opening=matches.filter(m=>m.opening==='negative').length;if(opening)list.push({type:'warn',title:'ระวังการดวลเปิดเกม',body:`มี ${opening} แมตช์ที่คุณระบุว่าตายก่อนบ่อย ลดการ peek คนเดียวโดยไม่มีข้อมูล ใช้ flash/เพื่อนช่วย และเปลี่ยน timing หลังถูกจับทาง`});
+ const utility=matches.filter(m=>m.utility==='low'||m.utility==='waste').length;if(utility)list.push({type:'',title:'ฝึกใช้ Utility ให้เกิดผล',body:`มี ${utility} แมตช์ที่การใช้ระเบิดยังเป็นจุดอ่อน ฝึก smoke/flash พื้นฐานของแผนที่ที่เล่นบ่อย และใช้ระเบิดเพื่อเปิดทางหรือหยุดการบุก`});
+ const exposed=matches.filter(m=>m.position==='exposed').length;if(exposed)list.push({type:'warn',title:'ปรับการยืนตำแหน่ง',body:`มี ${exposed} แมตช์ที่คุณบันทึกว่าเปิดมุมหลายด้าน พยายามให้มีมุมที่ต้องรับมือทีละมุม ใช้ cover และขยับหลังยิงเพื่อไม่ให้ศัตรูยิงสวนง่าย`});
+ const tilt=matches.filter(m=>m.tilt==='tilted'||m.tilt==='tired').length;if(tilt)list.push({type:'',title:'จัดการสมาธิและอารมณ์',body:`มี ${tilt} แมตช์ที่สมาธิหรืออารมณ์เป็นปัญหา ถ้าแพ้ติดกันให้พัก 5 นาที และตั้งเป้าต่อเกมเป็นเรื่องที่ควบคุมได้ เช่น crosshair placement ไม่ใช่แค่จำนวน kill`});
+ if(!list.length)list.push({type:'ok',title:'รักษาความสม่ำเสมอ',body:'ยังไม่เห็นจุดอ่อนเด่นชัดจากข้อมูลที่กรอก ลองจด opening duel, การใช้ utility และโน้ตหลังเกมให้ละเอียดขึ้นเพื่อให้คำแนะนำเฉพาะเจาะจงกว่าเดิม'});
+ return list;
+}
+function renderInsights(id,items){$(id).innerHTML=items.map(x=>`<div class="insight ${x.type}"><strong>${escapeHtml(x.title)}</strong>${escapeHtml(x.body)}</div>`).join('')}
+function renderOverview(){
+ const t=totals(),n=matches.length; $('sMatches').textContent=n;$('sKda').textContent=`${t.kills} / ${t.deaths} / ${t.assists}`;$('sKDHint').textContent=`K/D Ratio: ${ratio(t.kills,t.deaths)}`;$('sHS').textContent=(t.hsWeight?(t.hsWeighted/t.hsWeight).toFixed(1):'0')+'%';$('sWin').textContent=pct(t.wins,n)+'%';$('sWinsHint').textContent=`ชนะ ${t.wins} จาก ${n} แมตช์`;
+ const max=Math.max(t.kills,t.deaths,t.assists,1);const bars=[['Kills',t.kills],['Deaths',t.deaths],['Assists',t.assists]];
+ $('overviewBars').innerHTML=bars.map(([label,v])=>`<div class="barrow"><span>${label}</span><div class="track"><div class="fill" style="width:${v/max*100}%"></div></div><b>${v}</b></div>`).join('');
+ renderInsights('dashboardInsights',insightList().slice(0,3));
+ const recent=[...matches].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);$('recentMatches').innerHTML=renderTable(recent,false);
+}
+function renderTable(list,actions=true){if(!list.length)return '<div class="empty">ยังไม่มีแมตช์ — กด “บันทึกแมตช์” เพื่อเพิ่มสถิติ</div>';return `<div class="tablewrap"><table><thead><tr><th>วันที่</th><th>Map</th><th>ผล</th><th>K / D / A</th><th>HS%</th><th>K/D</th>${actions?'<th>จัดการ</th>':''}</tr></thead><tbody>${list.map(m=>`<tr><td>${escapeHtml(new Date(m.date).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'}))}</td><td><strong>${escapeHtml(m.map)}</strong><div class="small">${escapeHtml(m.mode||'')}</div></td><td><span class="pill ${m.result==='win'?'win':m.result==='loss'?'loss':''}">${m.result==='win'?'ชนะ':m.result==='loss'?'แพ้':'เสมอ'}</span><div class="small">${escapeHtml(m.score||'')}</div></td><td>${m.kills} / ${m.deaths} / ${m.assists}</td><td>${matchHsPct(m).toFixed(1)}%</td><td>${ratio(m.kills,m.deaths)}</td>${actions?`<td><button onclick="editMatch('${m.id}')">แก้ไข</button> <button class="danger" onclick="deleteMatch('${m.id}')">ลบ</button><div class="small">${escapeHtml(m.notes||'')}</div></td>`:''}</tr>`).join('')}</tbody></table></div>`}
+function renderHistory(){const q=$('searchHistory').value.toLowerCase(),f=$('filterResult').value;const list=[...matches].filter(m=>(f==='all'||m.result===f)&&(`${m.map} ${m.notes} ${m.score}`.toLowerCase().includes(q))).sort((a,b)=>b.date.localeCompare(a.date));$('historyTable').innerHTML=renderTable(list,true)}
+function renderAnalysis(){renderInsights('fullAnalysis',insightList());const tt=totals(),hs=tt.hsWeight?tt.hsWeighted/tt.hsWeight:0,k=tt.kills;const tasks=[];tasks.push({type:'',title:'วอร์ม Aim 10–15 นาที',body:'เริ่มด้วยยิงเป้านิ่ง 3 นาที → burst 4 นาที → Deathmatch 5–8 นาที โดยเน้นหยุดก่อนยิงและวางเป้าระดับหัว'});if(hs<40)tasks.push({type:'',title:'โฟกัส Headshot',body:'ฝึกยิงทีละ 1–3 นัดและ reset เป้า อย่าฝืน spray ระยะไกล'});tasks.push({type:'',title:'รีวิว 3 รอบที่ตาย',body:'หลังเกมจดว่าตายเพราะอะไร: peek ซ้ำ, ไม่มีข้อมูล, ยืนโล่ง, reload ผิดจังหวะ หรือโดน trade แล้วเลือกแก้เพียงหนึ่งอย่างในเกมถัดไป'});tasks.push({type:'',title:'ตั้งเป้าหมายที่วัดได้',body:'ตัวอย่าง: ลดการตายจากการ peek ซ้ำ 2 ครั้งต่อเกม หรือใช้ flash ช่วยทีมอย่างน้อย 3 ครั้ง ไม่ตั้งเป้าแค่ต้องฆ่าให้เยอะ'});renderInsights('trainingPlan',tasks)}
+function renderAll(){renderOverview();renderHistory();renderAnalysis()}
+function resetMatchForm(){ $('matchForm').reset();$('editId').value='';$('formTitle').textContent='บันทึกสถิติแมตช์ใหม่';$('cancelEdit').style.display='none';$('date').value=localDateTime();$('kills').value=15;$('deaths').value=12;$('assists').value=4;$('hsPct').value=40;$('damage').value=1500;$('mvp').value=0}
+$('matchForm').addEventListener('submit',e=>{e.preventDefault();const kills=num('kills'),hsPct=num('hsPct'),shots=num('shots'),hits=num('hits');if(hsPct>100){alert('Headshot % ต้องอยู่ระหว่าง 0 ถึง 100');return}if(shots&&hits>shots){alert('จำนวนกระสุนโดนต้องไม่มากกว่าจำนวนกระสุนที่ยิง');return}
+ const id=$('editId').value||String(Date.now());const m={id,date:$('date').value||localDateTime(),map:$('map').value,result:$('result').value,score:$('score').value.trim(),side:$('side').value,mode:$('mode').value,kills,deaths:num('deaths'),assists:num('assists'),hsPct,damage:num('damage'),adr:num('adr'),shots,hits,mvp:num('mvp'),opening:$('opening').value,utility:$('utility').value,aim:$('aim').value,position:$('position').value,tilt:$('tilt').value,notes:$('notes').value.trim()};
+ const i=matches.findIndex(x=>x.id===id);if(i>=0)matches[i]=m;else matches.push(m);save();resetMatchForm();go('dashboard')});
+$('cancelEdit').onclick=()=>{resetMatchForm();go('history')};$('resetForm').addEventListener('click',()=>setTimeout(()=>{$('date').value=localDateTime()},0));
+window.editMatch=id=>{const m=matches.find(x=>x.id===id);if(!m)return;go('add');$('editId').value=m.id;$('formTitle').textContent='แก้ไขข้อมูลแมตช์';$('cancelEdit').style.display='inline-block';for(const k of ['date','map','result','score','side','mode','kills','deaths','assists','hsPct','damage','adr','shots','hits','mvp','opening','utility','aim','position','tilt','notes'])if($(k))$(k).value=m[k]??''};
+window.deleteMatch=id=>{if(confirm('ต้องการลบแมตช์นี้ใช่ไหม?')){matches=matches.filter(m=>m.id!==id);save()}};
+$('searchHistory').addEventListener('input',renderHistory);$('filterResult').addEventListener('change',renderHistory);
+$('exportBtn').onclick=()=>{if(!matches.length){alert('ยังไม่มีข้อมูลให้ส่งออก');return}const cols=['date','map','mode','result','score','side','kills','deaths','assists','hsPct','damage','adr','shots','hits','mvp','opening','utility','aim','position','tilt','notes'];const csv=[cols.join(','),...matches.map(m=>cols.map(k=>'"'+String(m[k]??'').replace(/"/g,'""')+'"').join(','))].join('\r\n');const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='cs-stats-lab.csv';a.click();URL.revokeObjectURL(a.href)};
+renderAll();
+</script>
+</body>
+</html>
